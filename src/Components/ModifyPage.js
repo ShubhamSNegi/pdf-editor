@@ -7,79 +7,105 @@ function ModifyPage(props) {
             modifyPdf();
             props.resetButtonType();
         }
-    }, [props.buttonType]);
+    }, [props.buttonType, props.pdf, props.result, props.bounds]);
 
     async function modifyPdf() {
         try {
-            let pdfUrl;
+            let pdfBytes;
+            // Load PDF bytes from different sources
             if (typeof props.pdf === 'string') {
-                pdfUrl = props.pdf;
-            } else if (typeof props.pdf === 'object' || props.pdf instanceof File) {
-                pdfUrl = URL.createObjectURL(props.pdf);
+                // If PDF is provided as URL
+                const response = await fetch(props.pdf);
+                if (!response.ok) throw new Error('Failed to fetch PDF');
+                pdfBytes = await response.arrayBuffer();
+            } else if (props.pdf instanceof Blob || props.pdf instanceof File) {
+                // If PDF is provided as a Blob or File object
+                pdfBytes = await props.pdf.arrayBuffer();
             } else {
-                throw new Error('Invalid PDF URL');
+                throw new Error('Invalid PDF source');
             }
-            
-            // Fetch the PDF bytes
-            const response = await fetch(pdfUrl);
-            if (!response.ok) {
-                throw new Error('Failed to fetch PDF');
-            }
-            const pdfBytes = await response.arrayBuffer();
-    
+
             // Load PDF document
             const pdfDoc = await PDFDocument.load(pdfBytes);
             const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
             const pages = pdfDoc.getPages();
             const textSize = 16;
-    
+
             // Modify PDF based on results
             props.result.forEach(async (res) => {
+                const pageIdx = res.page - 1;
                 if (res.type === "text") {
-                    pages[res.page - 1].drawText(res.text, {
-                        x: res.ref.current.offsetLeft - props.bounds.x,
-                        y: props.bounds.y - res.ref.current.offsetTop - 17,
+                    pages[pageIdx].drawText(res.text, {
+                        x: res.x - props.bounds.x,
+                        y: props.bounds.y - res.y - textSize, // Adjust y position based on text size
                         size: textSize,
                         font: helveticaFont,
                         color: rgb(0, 0, 0),
-                        maxWidth: res.ref.current.getBoundingClientRect().width,
-                        lineHeight: 15
+                        maxWidth: res.width, // Use provided width
+                        lineHeight: res.lineHeight || 15, // Use provided lineHeight or default
                     });
                 }
-                if (res.type === "freehand") {
-                    const pathData = "M " + res.arr.map(p => `${p.get('x')},${p.get('y')}`).join(" L ");
-                    pages[res.page - 1].moveTo(0, pages[0].getHeight());
-                    pages[res.page - 1].drawSvgPath(pathData, { borderColor: rgb(0, 0, 0) });
-                }
                 if (res.type === "image") {
-                    const imageBytes = atob(res.image.split(',')[1]);
-                    const image = await pdfDoc.embedPng(imageBytes);
-                    const page = pages[res.page - 1];
+                    // Fetch image bytes
+                    const response = await fetch(res.image);
+                    console.log(res);
+                    if (!response.ok) throw new Error('Failed to fetch image');
+                    const imageBytes = await response.arrayBuffer();
+                
+                    // Embed image into PDF document
+                    const image = await pdfDoc.embedJpg(imageBytes); // Assuming image is JPEG format
                     const dimensions = image.scale(0.5);
-                    page.drawImage(image, {
-                        x: res.x - props.bounds.x,
-                        y: props.bounds.y - res.y, // Adjust y position based on user input
+                
+                    // Ensure res.x and props.bounds.x are valid numbers
+                    if (typeof res.x !== 'number' || isNaN(res.x)) {
+                        throw new Error(`Invalid value for res.x: ${res.x}`);
+                    }
+                
+                    if (typeof props.bounds.x !== 'number' || isNaN(props.bounds.x)) {
+                        throw new Error(`Invalid value for props.bounds.x: ${props.bounds.x}`);
+                    }
+                
+                    // Ensure res.y and props.bounds.y are valid numbers
+                    if (typeof res.y !== 'number' || isNaN(res.y)) {
+                        throw new Error(`Invalid value for res.y: ${res.y}`);
+                    }
+                
+                    if (typeof props.bounds.y !== 'number' || isNaN(props.bounds.y)) {
+                        throw new Error(`Invalid value for props.bounds.y: ${props.bounds.y}`);
+                    }
+                
+                    // Calculate image position (x, y)
+                    const x = res.x - props.bounds.x;
+                    const y = props.bounds.y - res.y;
+                    console.log("Image position (x, y):", x, y);
+                
+                    // Draw image onto PDF page
+                    pages[pageIdx].drawImage(image, {
+                        x: x,
+                        y: y,
                         width: dimensions.width,
                         height: dimensions.height,
                     });
                 }
+                
+                
             });
-    
+
             // Save modified PDF
             const modifiedPdfBytes = await pdfDoc.save();
-    
+
             // Create a download link for the modified PDF
             const blob = new Blob([modifiedPdfBytes], { type: "application/pdf" });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            const fileName = "modified_pdf.pdf";
-            link.download = fileName;
+            link.download = "modified_pdf.pdf";
             link.click();
         } catch (error) {
             console.error("Error modifying PDF:", error);
             // Handle error gracefully, display a message to the user, etc.
         }
     }
+
     return null; // ModifyPage component doesn't render anything
 }
 

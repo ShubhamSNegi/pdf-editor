@@ -1,3 +1,4 @@
+import { height, width } from '@fortawesome/free-solid-svg-icons/fa0';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
@@ -25,7 +26,9 @@ const dropzoneStyle = {
   borderRadius: '4px',
   padding: '20px',
   textAlign: 'center',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  width: '50%',
+  margin: '0 auto',
 };
 
 export default FileUploader;

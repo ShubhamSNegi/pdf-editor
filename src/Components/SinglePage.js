@@ -59,6 +59,7 @@ export default function SinglePage(props) {
             cursor={props.cursor} 
             buttonType={props.buttonType} 
             resetButtonType={props.resetButtonType}
+            images={props.images} // Pass the images state to DrawArea
           >
             <Page pageNumber={pageNumber} />
           </DrawArea>

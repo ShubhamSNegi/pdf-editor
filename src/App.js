@@ -20,6 +20,7 @@ export default function App() {
   const [buttonType, setButtonType] = useState("");
   const tempRef = useRef(null);
   const [fileUploaded, setFileUploaded] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
 
   useEffect(() => {
     if (isText) {
@@ -35,11 +36,31 @@ export default function App() {
   };
 
   // Function to handle image upload
-  const handleImageUpload = (imageDataUrl) => {
-    setResult([
-      ...result,
-      { id: generateKey(), x: 100, y: 100, image: imageDataUrl, page: pageNumber, type: "image" },
-    ]);
+  // Function to add image in PDF
+  const addImage = () => {
+    console.log("hello");
+    // Flag to change cursor if adding image
+    setIsText(false); // Ensure text mode is turned off
+    document.getElementById("drawArea").addEventListener("click", (e) => {
+      e.preventDefault();
+      // Trigger input file click event to choose image file
+      document.getElementById("imageInput").click();
+    }, { once: true });
+  };
+
+  // Function to handle image upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setResult([
+          ...result,
+          { id: generateKey(e.pageX), x: e.pageX, y: e.pageY - 10, image: event.target.result, page: pageNumber, type: "image" },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Keep track of current page number
@@ -133,11 +154,13 @@ export default function App() {
       }
     }
   };
+
+  const insertNewImage = async () => {
+  };
   
 
   return (
     <div className="App">
-      {!fileUploaded && <FileUploader onFileUpload={handleFileUpload} />}
       {pdfFile ? (
         <>
           {result.map((res) => {
@@ -166,21 +189,23 @@ export default function App() {
 
           <div className="navbar">
             <button onClick={undo} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-undo"></i></button>
-            <button onClick={redo} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-redo"></i></button>
-            <button onClick={addText} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-text"></i></button>
+            <button onClick={redo} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-repeat"></i></button>
+            <button onClick={addText} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-text-width"></i></button>
             <button onClick={() => changeButtonType("draw")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-pencil"></i></button>
             <button onClick={() => changeButtonType("download")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-download"></i></button>
-            <button onClick={insertNewPage} style={{ marginTop: "1%", marginBottom: "1%" }}>New Page</button>
+            <button onClick={insertNewPage} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-plus"></i></button>
+            <button onClick={addImage} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-picture-o"></i></button>
           </div>
-
-          <SinglePage resetButtonType={resetButtonType} buttonType={buttonType} cursor={isText ? "text" : "default"} pdf={pdfFile} pageChange={pageChange} getPaths={getPaths} flag={flag} getBounds={getBounds} changeFlag={changeFlag} />
+          <input id="imageInput" type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
+          <SinglePage resetButtonType={resetButtonType} buttonType={buttonType} cursor={isText ? "text" : "default"} pdf={pdfFile} pageChange={pageChange} getPaths={getPaths} flag={flag} getBounds={getBounds} changeFlag={changeFlag} images={result} />
           <ModifyPage resetButtonType={resetButtonType} buttonType={buttonType} pdf={pdfFile} result={result} bounds={bounds} />
-          <ImageUploader onImageUpload={handleImageUpload} />
           <hr></hr>
         </>
       ) : (
-        <p></p>
-        // <p>Please upload a PDF file</p>
+        <>
+        <h1 style={{ color: "#3f51b5", marginBottom: '10%'}}>REACT PDF EDITOR</h1>
+        {!fileUploaded && <FileUploader onFileUpload={handleFileUpload} />}
+        </>
       )}
     </div>
   );
