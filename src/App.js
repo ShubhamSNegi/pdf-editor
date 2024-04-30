@@ -7,7 +7,6 @@ import FileUploader from './Components/FileUploader';
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import { PDFDocument, PageSizes } from 'pdf-lib';
-import ImageUploader from './Components/ImageUploader';
 
 export default function App() {
   const [pdfFile, setPdfFile] = useState(null);
@@ -21,6 +20,7 @@ export default function App() {
   const tempRef = useRef(null);
   const [fileUploaded, setFileUploaded] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [lastClickLocation, setLastClickLocation] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (isText) {
@@ -35,32 +35,35 @@ export default function App() {
     setFileUploaded(true);
   };
 
-  // Function to handle image upload
-  // Function to add image in PDF
   const addImage = () => {
-    console.log("hello");
-    // Flag to change cursor if adding image
     setIsText(false); // Ensure text mode is turned off
-    document.getElementById("drawArea").addEventListener("click", (e) => {
-      e.preventDefault();
-      // Trigger input file click event to choose image file
-      document.getElementById("imageInput").click();
-    }, { once: true });
+    document.getElementById("drawArea").addEventListener("click", handleImageClick);
   };
-
-  // Function to handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setResult([
-          ...result,
-          { id: generateKey(e.pageX), x: e.pageX, y: e.pageY - 10, image: event.target.result, page: pageNumber, type: "image" },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    }
+  
+  // Event listener to handle image click and capture mouse coordinates
+  const handleImageClick = (e) => {
+    const mouseX = e.clientX + document.documentElement.scrollLeft || document.body.scrollLeft;
+    const mouseY = e.clientY + document.documentElement.scrollTop || document.body.scrollTop;
+    handleImageUpload(mouseX, mouseY);
+  };
+  
+  // Function to handle image upload with provided mouse coordinates
+  const handleImageUpload = (mouseX, mouseY) => {
+    document.getElementById("imageInput").click();
+    const fileInput = document.getElementById("imageInput");
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setResult([
+            ...result,
+            { id: generateKey(mouseX), x: mouseX, y: mouseY - 10, image: event.target.result, page: pageNumber, type: "image" }, // Include page number
+          ]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   };
 
   // Keep track of current page number
@@ -191,7 +194,7 @@ export default function App() {
             <button onClick={undo} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-undo"></i></button>
             <button onClick={redo} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-repeat"></i></button>
             <button onClick={addText} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-text-width"></i></button>
-            <button onClick={() => changeButtonType("draw")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-pencil"></i></button>
+            {/* <button onClick={() => changeButtonType("draw")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-pencil"></i></button> */}
             <button onClick={() => changeButtonType("download")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-download"></i></button>
             <button onClick={insertNewPage} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-plus"></i></button>
             <button onClick={addImage} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-picture-o"></i></button>

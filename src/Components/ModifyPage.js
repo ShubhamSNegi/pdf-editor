@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 function ModifyPage(props) {
@@ -46,45 +46,23 @@ function ModifyPage(props) {
                     });
                 }
                 if (res.type === "image") {
-                    // Fetch image bytes
-                    const response = await fetch(res.image);
-                    console.log(res);
-                    if (!response.ok) throw new Error('Failed to fetch image');
-                    const imageBytes = await response.arrayBuffer();
-                
                     // Embed image into PDF document
-                    const image = await pdfDoc.embedJpg(imageBytes); // Assuming image is JPEG format
-                    const dimensions = image.scale(0.5);
-                
-                    // Ensure res.x and props.bounds.x are valid numbers
-                    if (typeof res.x !== 'number' || isNaN(res.x)) {
-                        throw new Error(`Invalid value for res.x: ${res.x}`);
-                    }
-                
-                    if (typeof props.bounds.x !== 'number' || isNaN(props.bounds.x)) {
-                        throw new Error(`Invalid value for props.bounds.x: ${props.bounds.x}`);
-                    }
-                
-                    // Ensure res.y and props.bounds.y are valid numbers
-                    if (typeof res.y !== 'number' || isNaN(res.y)) {
-                        throw new Error(`Invalid value for res.y: ${res.y}`);
-                    }
+                    let image = await pdfDoc.embedJpg(res.image);
+                    // Assuming image is JPEG format
+                    const { width, height } = image.scale(0.5);
                 
                     if (typeof props.bounds.y !== 'number' || isNaN(props.bounds.y)) {
                         throw new Error(`Invalid value for props.bounds.y: ${props.bounds.y}`);
                     }
-                
-                    // Calculate image position (x, y)
+                    console.log(res);
                     const x = res.x - props.bounds.x;
                     const y = props.bounds.y - res.y;
-                    console.log("Image position (x, y):", x, y);
-                
-                    // Draw image onto PDF page
                     pages[pageIdx].drawImage(image, {
                         x: x,
                         y: y,
-                        width: dimensions.width,
-                        height: dimensions.height,
+                        width,
+                        height,
+                        zIndex:2
                     });
                 }
                 
@@ -102,7 +80,6 @@ function ModifyPage(props) {
             link.click();
         } catch (error) {
             console.error("Error modifying PDF:", error);
-            // Handle error gracefully, display a message to the user, etc.
         }
     }
 

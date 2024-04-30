@@ -76,8 +76,8 @@ function DrawArea(props) {
         {props.children}
         <Drawing lines={lines} page={props.page} />
         {props.images.map((image, index) => (
-          <DrawImage key={index} image={image} drawAreaEl={drawAreaEl} />
-        ))}
+          image.page === props.page && <DrawImage key={index} image={image} drawAreaEl={drawAreaEl} />
+      ))}
       </div>
     </>
   );
@@ -107,10 +107,10 @@ function DrawImage({ image, drawAreaEl }) {
       src={image.image}
       style={{
         position: "absolute",
-        left: position.x + "px",
-        top: position.y + "px",
+        left: 10 + "px", // harcoded value
+        top: 10 + "px", // harcoded value
         zIndex: 2,
-        visibility: position.x === undefined || position.y === undefined ? "hidden" : "visible", // Hide image if position is undefined
+        visibility: position.x === undefined || position.y === undefined ? "hidden" : "visible",
       }}
       alt={`image_${image.id}`}
     />

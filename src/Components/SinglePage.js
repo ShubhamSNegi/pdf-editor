@@ -41,7 +41,6 @@ export default function SinglePage(props) {
       cMapPacked: true
     };
   }, []);
-
   return (
     <>
       <div>
@@ -52,7 +51,7 @@ export default function SinglePage(props) {
         >
           <DrawArea 
             getPaths={props.getPaths} 
-            page={pageNumber} 
+            page={pageNumber}
             flag={props.flag} 
             getBounds={props.getBounds} 
             changeFlag={props.changeFlag} 
