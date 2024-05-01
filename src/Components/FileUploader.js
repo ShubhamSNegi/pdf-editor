@@ -15,7 +15,7 @@ function FileUploader({ onFileUpload }) {
       {
         isDragActive ?
           <p>Drop the files here ...</p> :
-          <p>Drag 'n' drop some PDF files here, or click to select files</p>
+          <p>Drag 'n' Drop some PDF files here, or click to select files to EDIT</p>
       }
     </div>
   );

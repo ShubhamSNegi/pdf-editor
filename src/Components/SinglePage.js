@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DrawArea from "./DrawArea";
 import { Document, Page, pdfjs } from 'react-pdf';
 
@@ -6,7 +6,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 
 export default function SinglePage(props) {
   const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1); 
+  const [pageNumber, setPageNumber] = useState(1);
+  const drawAreaEl = useRef(null);
 
   useEffect(() => {
     props.pageChange(pageNumber);    
@@ -59,6 +60,7 @@ export default function SinglePage(props) {
             buttonType={props.buttonType} 
             resetButtonType={props.resetButtonType}
             images={props.images} // Pass the images state to DrawArea
+            drawAreaRef={drawAreaEl}
           >
             <Page pageNumber={pageNumber} />
           </DrawArea>

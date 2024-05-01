@@ -5,7 +5,8 @@ function DrawArea(props) {
   const [lines, setLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isCrosshair, setIsCrosshair] = useState(false);
-  const drawAreaEl = useRef(null);
+  // const drawAreaEl = useRef(null);
+  const drawAreaEl = props.drawAreaRef;
 
   useEffect(() => {
     const handleMouseUp = () => {

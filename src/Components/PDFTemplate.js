@@ -119,6 +119,7 @@ const PDFTemplate = ({ data }) => {
     // Trigger PDF download
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');    
     const link = document.createElement('a');
     link.href = url;
     link.download = 'generated_pdf.pdf';
@@ -129,7 +130,23 @@ const PDFTemplate = ({ data }) => {
 
   return (
     <div>
-      <button onClick={generatePDF}>Generate PDF</button>
+      <button 
+          style={{
+            padding: "15px 20px",
+            fontSize: "20px",
+            width: "250px",
+            backgroundColor: "#3f51b5",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            cursor: "pointer",
+            transition: "background-color 0.3s",
+          }} 
+          onClick={generatePDF}
+        >
+          <span>Generate</span><span> PDF</span>
+        </button>
     </div>
   );
 };

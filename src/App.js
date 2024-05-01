@@ -169,24 +169,35 @@ export default function App ()
     setButtonType( "" );
   };
 
-  const insertNewPage = async () =>
-  {
-    if ( pdfFile )
-    {
-      try
-      {
+  const insertNewPage = async () => {
+    if (pdfFile) {
+      try {
         const existingPdfBytes = await pdfFile.arrayBuffer();
-        const pdfDoc = await PDFDocument.load( existingPdfBytes );
-        const newPage = pdfDoc.addPage( PageSizes.A4 );
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const newPage = pdfDoc.addPage(PageSizes.A4);
+        
+        // Add footer image
+        const footerImageBytes = await fetch(process.env.PUBLIC_URL + '/footer.png').then((res) => res.arrayBuffer());
+        const footerImage = await pdfDoc.embedPng(footerImageBytes);
+        const footerX = 10; // Adjust as needed
+        const footerY = 10; // Adjust as needed
+        const footerWidth = 580; // Adjust as needed
+        const footerHeight = 90; // Adjust as needed
+        newPage.drawImage(footerImage, {
+          x: footerX,
+          y: footerY,
+          width: footerWidth,
+          height: footerHeight,
+        });
+        
         const newPdfBytes = await pdfDoc.save();
-        setPdfFile( new Blob( [ newPdfBytes ], { type: 'application/pdf' } ) );
-        setPageNumber( pdfDoc.getPageCount() ); // Set page number to the newly inserted page
-      } catch ( error )
-      {
-        console.error( 'Error inserting new page:', error );
+        setPdfFile(new Blob([newPdfBytes], { type: 'application/pdf' }));
+        setPageNumber(pdfDoc.getPageCount()); // Set page number to the newly inserted page
+      } catch (error) {
+        console.error('Error inserting new page:', error);
       }
     }
-  };
+  };  
 
   const buildingInfo = {
     'Name': 'Test User',
@@ -271,9 +282,15 @@ export default function App ()
         </>
       ) : (
         <>
-          <h1 style={ { color: "#3f51b5", marginBottom: '10%' } }>REACT PDF EDITOR</h1>
-          <PDFTemplate data={ { buildingInformation: testData.buildingInformation, images: testData.images, text: testData.textData } } />
-          { !fileUploaded && <FileUploader onFileUpload={ handleFileUpload } /> }
+        <div style={{ textAlign: 'center', paddingTop: '20px' }}>
+          <h1 style={{ color: '#3f51b5', marginBottom: '100px' }}>REACT PDF EDITOR</h1>
+          <p style={{fontWeight: "bold", fontSize: "30px"}}>Create a General PDF Template</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px', marginTop: '20px' }}>
+            <PDFTemplate data={{ buildingInformation: testData.buildingInformation, images: testData.images, text: testData.textData }} />
+          </div>
+        </div>
+        <p style={{fontWeight: "bold", fontSize: "40px"}}>OR</p>
+        {!fileUploaded && <FileUploader onFileUpload={handleFileUpload} />}
         </>
       ) }
     </div>
