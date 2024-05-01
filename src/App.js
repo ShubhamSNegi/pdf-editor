@@ -3,9 +3,10 @@ import SinglePage from './Components/SinglePage';
 import ModifyPage from './Components/ModifyPage';
 import AutoTextArea from './Components/AutoTextArea';
 import FileUploader from './Components/FileUploader';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { PDFDocument, PageSizes } from 'pdf-lib';
 import PDFTemplate from './Components/PDFTemplate';
-
 
 export default function App ()
 {
