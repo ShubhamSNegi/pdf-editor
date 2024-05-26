@@ -5,8 +5,9 @@ import AutoTextArea from './Components/AutoTextArea';
 import FileUploader from './Components/FileUploader';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { PDFDocument, PageSizes } from 'pdf-lib';
+import { PDFDocument, PageSizes, rgb } from 'pdf-lib';
 import PDFTemplate from './Components/PDFTemplate';
+import DropdownButton from './Components/DropdownButton';
 
 export default function App ()
 {
@@ -169,12 +170,27 @@ export default function App ()
     setButtonType( "" );
   };
 
-  const insertNewPage = async () => {
+  const insertNewPage = async (page) => {
     if (pdfFile) {
       try {
+       if(page == "Title Page"){
         const existingPdfBytes = await pdfFile.arrayBuffer();
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const newPage = pdfDoc.addPage(PageSizes.A4);
+
+        // Add header image
+        const headerImageBytes = await fetch(process.env.PUBLIC_URL + '/footer.png').then((res) => res.arrayBuffer());
+        const headerImage = await pdfDoc.embedPng(headerImageBytes);
+        const headerX = 10; // Adjust as needed
+        const headerY = newPage.getHeight() - 100; // Adjust as needed, placed near the top
+        const headerWidth = 580; // Adjust as needed
+        const headerHeight = 90; // Adjust as needed
+        newPage.drawImage(headerImage, {
+            x: headerX,
+            y: headerY,
+            width: headerWidth,
+            height: headerHeight,
+        });
         
         // Add footer image
         const footerImageBytes = await fetch(process.env.PUBLIC_URL + '/footer.png').then((res) => res.arrayBuffer());
@@ -189,11 +205,206 @@ export default function App ()
           width: footerWidth,
           height: footerHeight,
         });
-        
+
+        // Add border between header and footer
+        const borderX = 10; // Same X coordinate as header and footer
+        const borderY = footerY + footerHeight + 10; // Y coordinate just above the footer
+        const borderWidth = headerWidth; // Same width as header and footer
+        const borderHeight = headerY - (footerY + footerHeight + 20); // Height between header and footer
+        const borderColor = rgb(0, 0, 0); // Border color (black)
+
+        // Top border line
+        newPage.drawLine({
+            start: { x: borderX, y: borderY + borderHeight },
+            end: { x: borderX + borderWidth, y: borderY + borderHeight },
+            thickness: 1,
+            color: borderColor,
+        });
+
+        // Bottom border line
+        newPage.drawLine({
+            start: { x: borderX, y: borderY },
+            end: { x: borderX + borderWidth, y: borderY },
+            thickness: 1,
+            color: borderColor,
+        });
+
+        // Left border line
+        newPage.drawLine({
+            start: { x: borderX, y: borderY },
+            end: { x: borderX, y: borderY + borderHeight },
+            thickness: 1,
+            color: borderColor,
+        });
+
+        // Right border line
+        newPage.drawLine({
+            start: { x: borderX + borderWidth, y: borderY },
+            end: { x: borderX + borderWidth, y: borderY + borderHeight },
+            thickness: 1,
+            color: borderColor,
+        });
+
         const newPdfBytes = await pdfDoc.save();
         setPdfFile(new Blob([newPdfBytes], { type: 'application/pdf' }));
         setPageNumber(pdfDoc.getPageCount()); // Set page number to the newly inserted page
-      } catch (error) {
+      }
+      else if (page == "Cover Page 1"){
+        const existingPdfBytes = await pdfFile.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+        // Add a new page in landscape orientation
+        const pageWidth = PageSizes.A4[1];
+        const pageHeight = PageSizes.A4[0]; // Use reverse for landscape
+        const newPage = pdfDoc.addPage([pageWidth, pageHeight]);
+
+        const borderColor = rgb(0, 0, 0);
+        const boxThickness = 1;
+        const gap = 10;
+
+        // Define the main border
+        const borderX = 10;
+        const borderY = 10;
+        const borderWidth = pageWidth - 20;
+        const borderHeight = pageHeight - 20;
+
+        // Draw main border lines
+        // newPage.drawRectangle({
+        //   x: borderX,
+        //   y: borderY,
+        //   width: borderWidth,
+        //   height: borderHeight,
+        //   borderColor: borderColor,
+        //   borderWidth: boxThickness,
+        // });
+
+        // Calculate split points with gaps
+        const halfHeight = (borderHeight - gap) / 2;
+        const smallBoxWidth = (borderWidth - 2 * gap) * 0.45;
+        const largeBoxWidth = (borderWidth - 2 * gap) * 0.55;
+
+        // Upper half boxes
+        const upperY = borderY + halfHeight + gap;
+
+        // Small box (25% width)
+        newPage.drawRectangle({
+          x: borderX,
+          y: upperY,
+          width: smallBoxWidth,
+          height: halfHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+
+        // Gap between small box and large box
+        const secondBoxX = borderX + smallBoxWidth + gap;
+
+        // Large box (75% width)
+        newPage.drawRectangle({
+          x: secondBoxX,
+          y: upperY,
+          width: largeBoxWidth,
+          height: halfHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+
+        // Lower half box (100% width)
+        newPage.drawRectangle({
+          x: borderX,
+          y: borderY,
+          width: borderWidth,
+          height: halfHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+
+        // Save the modified PDF
+        const newPdfBytes = await pdfDoc.save();
+        const newBlob = new Blob([newPdfBytes], { type: 'application/pdf' });
+        // Assuming setPdfFile and setPageNumber are defined
+        setPdfFile(newBlob);
+        setPageNumber(pdfDoc.getPageCount());
+      }
+      else {
+        const existingPdfBytes = await pdfFile.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
+        // Add a new page in landscape orientation
+        const pageWidth = PageSizes.A4[1];
+        const pageHeight = PageSizes.A4[0]; // Use reverse for landscape
+        const newPage = pdfDoc.addPage([pageWidth, pageHeight]);
+      
+        const borderColor = rgb(0, 0, 0);
+        const boxThickness = 1;
+        const gap = 10;
+      
+        // Define the main border
+        const borderX = 10;
+        const borderY = 10;
+        const borderWidth = pageWidth - 20;
+        const borderHeight = pageHeight - 20;
+      
+        // Calculate widths and heights
+        const leftBoxWidth = (borderWidth - gap) * 0.35;
+        const rightBoxWidth = (borderWidth - gap) * 0.65;
+        const upperRightBoxHeight = (borderHeight - gap) * 0.5;
+        const lowerRightBoxHeight = (borderHeight - gap) * 0.5;
+      
+        // Left box (35% width, full height)
+        newPage.drawRectangle({
+          x: borderX,
+          y: borderY,
+          width: leftBoxWidth,
+          height: borderHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+      
+        // Right upper box (65% width, 50% height)
+        const rightBoxX = borderX + leftBoxWidth + gap;
+        const upperRightBoxY = borderY + lowerRightBoxHeight + gap;
+        newPage.drawRectangle({
+          x: rightBoxX,
+          y: upperRightBoxY,
+          width: rightBoxWidth,
+          height: upperRightBoxHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+      
+        // Right lower left box (32.5% width, 50% height)
+        const lowerRightBoxWidth = (rightBoxWidth - gap) * 0.5;
+        const lowerRightBoxY = borderY;
+        newPage.drawRectangle({
+          x: rightBoxX,
+          y: lowerRightBoxY,
+          width: lowerRightBoxWidth,
+          height: lowerRightBoxHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+      
+        // Right lower right box (32.5% width, 50% height)
+        const lowerRightBoxX = rightBoxX + lowerRightBoxWidth + gap;
+        newPage.drawRectangle({
+          x: lowerRightBoxX,
+          y: lowerRightBoxY,
+          width: lowerRightBoxWidth,
+          height: lowerRightBoxHeight,
+          borderColor: borderColor,
+          borderWidth: boxThickness,
+        });
+      
+        // Save the modified PDF
+        const newPdfBytes = await pdfDoc.save();
+        const newBlob = new Blob([newPdfBytes], { type: 'application/pdf' });
+        // Assuming setPdfFile and setPageNumber are defined
+        setPdfFile(newBlob);
+        setPageNumber(pdfDoc.getPageCount());
+      }
+      } 
+      catch (error) {
         console.error('Error inserting new page:', error);
       }
     }
@@ -272,8 +483,9 @@ export default function App ()
             <button onClick={ addText } style={ { marginTop: "1%", marginBottom: "1%" } }><i style={ { fontSize: 25 } } className="fa fa-text-width"></i></button>
             {/* <button onClick={() => changeButtonType("draw")} style={{ marginTop: "1%", marginBottom: "1%" }}><i style={{ fontSize: 25 }} className="fa fa-fw fa-pencil"></i></button> */ }
             <button onClick={ () => changeButtonType( "download" ) } style={ { marginTop: "1%", marginBottom: "1%" } }><i style={ { fontSize: 25 } } className="fa fa-fw fa-download"></i></button>
-            <button onClick={ insertNewPage } style={ { marginTop: "1%", marginBottom: "1%" } }><i style={ { fontSize: 25 } } className="fa fa-plus"></i></button>
+            {/* <button onClick={ insertNewPage } style={ { marginTop: "1%", marginBottom: "1%" } }><i style={ { fontSize: 25 } } className="fa fa-plus"></i></button> */}
             <button onClick={ addImage } style={ { marginTop: "1%", marginBottom: "1%" } }><i style={ { fontSize: 25 } } className="fa fa-picture-o"></i></button>
+            <DropdownButton insertNewPage={insertNewPage} />
           </div>
           <input id="imageInput" type="file" accept="image/*" style={ { display: "none" } } onChange={ handleImageUpload } />
           <SinglePage resetButtonType={ resetButtonType } buttonType={ buttonType } cursor={ isText ? "text" : "default" } pdf={ pdfFile } pageChange={ pageChange } getPaths={ getPaths } flag={ flag } getBounds={ getBounds } changeFlag={ changeFlag } images={ result } />

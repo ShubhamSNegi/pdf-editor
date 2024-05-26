@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Immutable from 'immutable';
+import { string } from 'prop-types';
 
 function DrawArea(props) {
   const [lines, setLines] = useState([]);
@@ -28,6 +29,21 @@ function DrawArea(props) {
       };
     }
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const pageWidth = props.pageWidth;
+      const pageHeight = props.pageHeight;
+      console.log(props);
+      drawAreaEl.current.style.width = pageWidth + "px"; // Adjust as needed
+      drawAreaEl.current.style.height = pageHeight + "px"; // Adjust as needed
+    };
+
+    handleResize(); // Initial resize to calculate position
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [props.pageWidth, props.pageHeight]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) {

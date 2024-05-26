@@ -7,6 +7,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 export default function SinglePage(props) {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [pageWidth, setPageWidth] = useState(null);
+  const [pageHeight, setPageHeight] = useState(null);
   const drawAreaEl = useRef(null);
 
   useEffect(() => {
@@ -23,6 +25,11 @@ export default function SinglePage(props) {
 
   function nextPage() {
     changePage(1);
+  }
+
+  function onPageLoadSuccess(page) {
+    setPageWidth(page.width);
+    setPageHeight(page.height);
   }
 
   // Function to handle document load success
@@ -61,8 +68,10 @@ export default function SinglePage(props) {
             resetButtonType={props.resetButtonType}
             images={props.images} // Pass the images state to DrawArea
             drawAreaRef={drawAreaEl}
+            pageWidth={pageWidth} // Pass page width to DrawArea
+            pageHeight={pageHeight} // Pass page height to DrawArea
           >
-            <Page pageNumber={pageNumber} />
+            <Page pageNumber={pageNumber} onLoadSuccess={onPageLoadSuccess} />
           </DrawArea>
         </Document>
       </div>
